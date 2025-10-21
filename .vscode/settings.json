@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.embeddedhtml": "html",
-        "user.h": "c"
+        "user.h": "c",
+        "types.h": "c"
     }
 }
