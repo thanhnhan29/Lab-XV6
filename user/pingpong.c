@@ -23,17 +23,21 @@ main(int argc, char *argv[])
         if(rec == 10){
             printf("%d: received pong\n", getpid());
         }
+        close(p1[1]);
+        close(p2[0]);
     }
     else{
         close(p1[1]);
         close(p2[0]);
         int send = 10;
         int rec = 0;
-        write(p2[1], &send, sizeof(send));
         read(p1[0], &rec, sizeof(rec));
         if(rec == 10){
             printf("%d: received ping\n", getpid());
         }
+        write(p2[1], &send, sizeof(send));
+        close(p1[0]);
+        close(p2[1]);
     }
     exit(0);
 }

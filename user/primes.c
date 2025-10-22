@@ -7,7 +7,7 @@ void primes(int p, int root){
     int first;
     
     if(read(p, &k, sizeof(k)) == sizeof(k)){
-        printf("prime: %d\n", k);
+        printf("prime %d\n", k);
     }else{
         close(p);
         exit(0);
