@@ -2,10 +2,6 @@
 #include "kernel/stat.h"
 #include "user/user.h"
 
-void pingpong(int p[2]){
-
-}
-
 int
 main(int argc, char *argv[])
 {

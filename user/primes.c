@@ -25,7 +25,7 @@ void primes(int p, int root){
         }
         close(p2[1]);
         close(p);
-        wait((int*)0);
+        wait(0);
     }
     else{
         close(p2[1]);
@@ -57,7 +57,7 @@ main(int argc, char *argv[])
         close(p[1]);
         primes(p[0],1);
         close(p[0]);
-        wait((int*)0);
+        wait(0);
     }
     exit(0);
 }
