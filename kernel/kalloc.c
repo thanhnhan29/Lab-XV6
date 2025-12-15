@@ -87,7 +87,23 @@ kalloc(void)
 #ifndef LAB_SYSCALL
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
+
 #endif
   return (void*)r;
 }
 
+uint64 
+count_free_pages(void)
+{
+  uint64 count = 0;
+
+  acquire(&kmem.lock);
+  struct run *r = kmem.freelist;
+  
+  while(r){
+    count += 1;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  return count*PGSIZE;
+}
