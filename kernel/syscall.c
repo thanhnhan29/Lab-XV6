@@ -131,6 +131,31 @@ static uint64 (*syscalls[])(void) = {
 [SYS_trace]   sys_trace,
 [SYS_sysinfo]   sys_sysinfo,
 };
+static int syscall_argc[] = {
+[SYS_fork]    0,  // int fork(void)
+[SYS_exit]    1,  // int exit(int)
+[SYS_wait]    1,  // int wait(int*)
+[SYS_pipe]    1,  // int pipe(int*)
+[SYS_read]    3,  // int read(int, void*, int)
+[SYS_kill]    1,  // int kill(int)
+[SYS_exec]    2,  // int exec(const char*, char**)
+[SYS_fstat]   2,  // int fstat(int fd, struct stat*)
+[SYS_chdir]   1,  // int chdir(const char*)
+[SYS_dup]     1,  // int dup(int)
+[SYS_getpid]  0,  // int getpid(void)
+[SYS_sbrk]    1,  // char* sbrk(int)
+[SYS_sleep]   1,  // int sleep(int)
+[SYS_uptime]  0,  // int uptime(void)
+[SYS_open]    2,  // int open(const char*, int)
+[SYS_write]   3,  // int write(int, const void*, int)
+[SYS_mknod]   3,  // int mknod(const char*, short, short)
+[SYS_unlink]  1,  // int unlink(const char*)
+[SYS_link]    2,  // int link(const char*, const char*)
+[SYS_mkdir]   1,  // int mkdir(const char*)
+[SYS_close]   1,  // int close(int)
+[SYS_trace]   1,  // int trace(int)
+[SYS_sysinfo] 1,  // int sysinfo(struct sysinfo*)
+};
 
 void
 syscall(void)
@@ -164,12 +189,31 @@ syscall(void)
     "sysinfo"
   };
   num = p->trapframe->a7;
+  uint64 args[6];
+  args[0] = p->trapframe->a0;
+  args[1] = p->trapframe->a1;
+  args[2] = p->trapframe->a2;
+  args[3] = p->trapframe->a3;
+  args[4] = p->trapframe->a4;
+  args[5] = p->trapframe->a5;
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
     p->trapframe->a0 = syscalls[num]();
     if ((p->trace_mask >> num) & 1) { 
         printf("%d: syscall %s -> %ld\n", p->pid, syscall_names[num], p->trapframe->a0);
+
+        uint64 count = syscall_argc[num];
+        printf("%s",syscall_names[num]);
+        printf("(");
+        for(int i = 0; i < count; i++) {
+            printf("%ld", args[i]); 
+            if (i < count - 1) {
+                printf(", "); 
+            }
+        }
+        printf(")");
+        printf(" -> %ld\n", p->trapframe->a0);
     }
   } else {
     printf("%d %s: unknown sys call %d\n",
