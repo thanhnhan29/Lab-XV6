@@ -123,3 +123,47 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+int
+sys_pgaccess(void)
+{
+  uint64 base;      // Địa chỉ ảo bắt đầu
+  int len;          // Số lượng trang cần kiểm tra
+  uint64 mask_addr; // Địa chỉ buffer user để lưu kết quả bitmask
+  uint64 bitmask = 0; // Biến tạm lưu kết quả trong kernel [cite: 203]
+
+  // 1. Lấy tham số từ user [cite: 202]
+  argaddr(0, &base);
+  argint(1, &len);
+  argaddr(2, &mask_addr);
+
+  // Giới hạn len để tránh tràn bitmask (tối đa 64 trang vì uint64 có 64 bit) [cite: 205]
+  if(len > 64)
+    len = 64;
+
+  struct proc *p = myproc();
+
+  // 2. Duyệt qua từng trang
+  for(int i = 0; i < len; i++){
+    uint64 va = base + i * PGSIZE; // Tính địa chỉ ảo của trang thứ i
+    
+    // Dùng hàm walk để tìm PTE tương ứng với va
+    pte_t *pte = walk(p->pagetable, va, 0);
+
+    // Kiểm tra xem PTE có tồn tại, có Valid và CÓ BIT ACCESSED không?
+    if(pte != 0 && (*pte & PTE_V) && (*pte & PTE_A)){
+      // Nếu có truy cập: Bật bit thứ i trong bitmask kết quả
+      bitmask |= (1L << i);
+
+      // QUAN TRỌNG: Xóa bit A sau khi kiểm tra 
+      // Để lần sau gọi pgaccess, nếu user không đụng vào trang này nữa thì bit A sẽ bằng 0
+      *pte &= ~PTE_A; 
+    }
+  }
+
+  // 3. Copy bitmask kết quả từ kernel ra user space [cite: 204]
+  if(copyout(p->pagetable, mask_addr, (char *)&bitmask, sizeof(bitmask)) < 0)
+    return -1;
+
+  return 0;
+}
