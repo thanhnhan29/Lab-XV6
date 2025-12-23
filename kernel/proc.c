@@ -29,6 +29,52 @@ struct spinlock wait_lock;
 // Allocate a page for each process's kernel stack.
 // Map it high in memory, followed by an invalid
 // guard page.
+
+
+#define FSHIFT      11              /* nr of bits of precision */
+#define FIXED_1     (1<<FSHIFT)     /* 1.0 as fixed-point (2048) */         
+#define EXP_1       1853
+#define EXP_5       2007
+#define EXP_15      2027
+
+uint64 avenrun[3] = {0, 0, 0};
+
+
+unsigned long
+calc_load(unsigned long load, unsigned long exp, unsigned long active)
+{
+    unsigned long newload;
+    
+    //a1 = a0 * e + a * (1 - e)
+    newload = load * exp + active * (FIXED_1 - exp);
+    
+    if (active >= load)
+        newload += FIXED_1-1;
+
+    return newload / FIXED_1;
+}
+void
+update_loadavg(void)
+{
+  struct proc *p;
+  uint64 active = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state == RUNNING || p->state == RUNNABLE){
+      active++;
+    }
+    release(&p->lock);
+  }
+
+  // 2. Chuẩn hóa số lượng active về dạng Fixed-Point
+  // Ví dụ: Có 2 process -> active = 2 * 2048 = 4096
+  active = active * FIXED_1;
+
+  avenrun[0] = calc_load(avenrun[0], EXP_1, active);
+  avenrun[1] = calc_load(avenrun[1], EXP_5, active);
+  avenrun[2] = calc_load(avenrun[2], EXP_15, active);
+}
 void
 proc_mapstacks(pagetable_t kpgtbl)
 {
@@ -700,8 +746,11 @@ count_process(void)
   uint64 count = 0;
   struct proc *p;
   for(p = proc; p < &proc[NPROC]; p++){
-    if(p->state != UNUSED)
-      count+=1;
+    acquire(&p->lock);       
+    if(p->state != UNUSED){
+      count++;
+    }
+    release(&p->lock);
   }
   return count;
 }

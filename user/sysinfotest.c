@@ -3,6 +3,10 @@
 #include "kernel/sysinfo.h"
 #include "user/user.h"
 
+#define FSHIFT      11
+#define FIXED_1     (1<<FSHIFT)
+#define LOAD_INT(x) ((x) >> FSHIFT)
+#define LOAD_FRAC(x) LOAD_INT(((x) & (FIXED_1-1)) * 100)
 
 void
 sinfo(struct sysinfo *info) {
@@ -140,7 +144,36 @@ void testbad() {
     exit(xstatus);
   }
 }
+void testload() {
+  struct sysinfo info;
+  int pid1, pid2;
+  
+  printf("Testing Load Average\n");
 
+  pid1 = fork();
+  if(pid1 == 0) {
+    while(1) { }
+  }
+
+  pid2 = fork();
+  if(pid2 == 0) {
+    while(1) { }
+  }
+
+  sleep(100); 
+
+  sinfo(&info);
+  
+  printf("Load Average: %ld.%ld, %ld.%ld, %ld.%ld\n", 
+         LOAD_INT(info.loads[0]), LOAD_FRAC(info.loads[0]),
+         LOAD_INT(info.loads[1]), LOAD_FRAC(info.loads[1]),
+         LOAD_INT(info.loads[2]), LOAD_FRAC(info.loads[2]));
+
+  kill(pid1);
+  kill(pid2);
+  wait(0);
+  wait(0);
+}
 int
 main(int argc, char *argv[])
 {
@@ -148,6 +181,7 @@ main(int argc, char *argv[])
   testcall();
   testmem();
   testproc();
+  testload();
   printf("sysinfotest: OK\n");
   exit(0);
 }

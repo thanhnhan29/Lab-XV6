@@ -102,17 +102,18 @@ sys_trace(void)
   myproc()->trace_mask = mask; 
   return 0;
 }
-
+extern uint64 avenrun[];
 uint64
 sys_sysinfo(void)
 {
   struct sysinfo info;
   uint64 addr;
   argaddr(0, &addr);
-
   info.freemem = count_free_pages();
   info.nproc = count_process();
-
+  info.loads[0] = avenrun[0];
+  info.loads[1] = avenrun[1];
+  info.loads[2] = avenrun[2];
   if (copyout(myproc()->pagetable, addr, (char *)&info, sizeof(info)) < 0)
     return -1;
 
