@@ -9,7 +9,7 @@ main(int argc, char *argv[])
     pipe(p1);
     int p2[2];
     pipe(p2);
-    if(fork()!=0){
+    if(fork()!=0){//con
         close(p1[0]);
         close(p2[1]);
         int send = 10;
@@ -22,7 +22,7 @@ main(int argc, char *argv[])
         close(p1[1]);
         close(p2[0]);
     }
-    else{
+    else{// cha 
         close(p1[1]);
         close(p2[0]);
         int send = 10;
