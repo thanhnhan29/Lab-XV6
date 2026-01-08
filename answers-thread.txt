@@ -1,4 +1,4 @@
-﻿Nguyên nhân là do \textbf{Race Condition} (điều kiện đua). Khi hai luồng cùng cố gắng chèn (put) một phần tử vào cùng một bucket (ngăn chứa) của bảng băm tại cùng một thời điểm:
+Nguyên nhân là do \textbf{Race Condition} (điều kiện đua). Khi hai luồng cùng cố gắng chèn (put) một phần tử vào cùng một bucket (ngăn chứa) của bảng băm tại cùng một thời điểm:
 \begin{itemize}
     \item Cả hai luồng cùng đọc địa chỉ đầu danh sách liên kết của bucket đó.
     \item Cả hai cùng cập nhật con trỏ \texttt{next} để trỏ đến phần tử mới của mình.
